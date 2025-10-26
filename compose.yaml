@@ -1,0 +1,128 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./docker/dev.Dockerfile
+    env_file: .env
+    volumes:
+      - ./src/server:/app/server
+    ports:
+      - "8000:8000"
+    depends_on:
+      database:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      endpoint_mode: vip
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+
+  database:
+    image: postgres:17.5-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app
+    volumes:
+      - database:/var/lib/postgresql/data
+    ports:
+      - "54321:5432"
+    healthcheck:
+      test: pg_isready -h localhost -U $$POSTGRES_USER -d $$POSTGRES_DB
+      interval: 2s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025" # WebUI
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+  minio:
+    image: quay.io/minio/minio
+    command: server /data --console-address ":9090"
+    restart: no
+    healthcheck:
+      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1 # https://github.com/minio/minio/issues/18373
+      interval: 5s
+      retries: 1
+      start_period: 5s
+      timeout: 5s
+    environment:
+      MINIO_ROOT_USER: user
+      MINIO_ROOT_PASSWORD: password
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    volumes:
+      - minio_data:/data
+    deploy:
+      update_config:
+        order: stop-first
+      mode: global
+      endpoint_mode: vip
+
+  redis:
+    image: redis:7.0-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server
+    restart: no
+    healthcheck:
+      test: redis-cli --raw incr ping
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      update_config:
+        order: stop-first
+      mode: global
+      endpoint_mode: vip
+      resources:
+        limits:
+          memory: 500M
+
+  kafka:
+    image: apache/kafka:latest
+    ports:
+      - "19092:19092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_LISTENERS: CONTROLLER://:9093,INTERNAL://:9092,EXTERNAL://:19092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:19092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_COMPRESSION_TYPE: lz4
+    healthcheck:
+      test: /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  database:
+  minio_data: # файлы, которые загружают пользователи
+  redis_data:

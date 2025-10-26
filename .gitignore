@@ -1,0 +1,46 @@
+## Ориентироваться а https://github.com/github/gitignore/blob/main/Python.gitignore
+
+## [go-task]
+.task/
+
+## [mkdocs]
+docs/docs/changelog.md
+docs/site/
+
+## [lint]
+ruff.json
+
+## [testing.coverage]
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+## [testing.python]
+.pytest_cache/
+.nox/
+.tox/
+junit/
+junit.xml
+
+## [Deprecated] ###################################################################
+
+## IDE
+.idea/
+.vscode/
+.zed/
+
+## Secrets
+.env
+.werf_secret_key
+
+## Python
+__pycache__/
+dist/
+.ipynb_checkpoints/
+.venv/
+
+## Test
+tmp/**
+.tox/
+.benchmarks/

@@ -1,0 +1,122 @@
+[tool.commitizen]
+name = "cz_customize"
+tag_format = "v$version"
+version_scheme = "semver2"
+version_provider = "uv"
+update_changelog_on_bump = false
+major_version_zero = true
+
+[tool.commitizen.customize]
+message_template = """
+{{type}}{% if scope and scope != "skip" %}({{scope}}){% endif %}{% if breaking_change %}!{% endif %}: {{summary}}
+
+{% if reason %}{{reason}}\n{% endif %}
+{% if breaking_change %}BREAKING CHANGE: {{breaking_change}}{% endif %}
+{% if deprecated %}DEPRECATED: {{deprecated}}{% endif %}
+
+{% if sdms %}SDMS: {{sdms}}{% endif %}
+{% if closed_issues %}Closed: {{closed_issues}}{% endif %}
+"""
+example = """
+fix(db): Исправлена ошибка при работе с sqlalchemy>=2.0 и pandas<2.0
+
+Ошибка заключается в том, что pandas<2.0 версии не поддерживает API sqlalchemy>=2.0
+Подробнее: https://github.com/pandas-dev/pandas/issues/40686
+
+SDMS: З0000322724
+Closed: #42
+"""
+schema = """
+<type>[optional scope]: <short summary>
+
+[optional reason]
+[optional breaking_change]
+[optional deprecated]
+
+[optional closed_issues]
+[optional sdms]
+"""
+schema_pattern = "^(build|ci|docs|feat|fix|perf|refactor|test)(\\(.+\\))?: .+"
+info_path = "docs/docs/contributing/commit_message_guidelines.md"
+bump_pattern = "^(breaking|feat|fix|docs|build|perf|test|refactor)"
+bump_map = { breaking = "MINOR", feat = "MINOR", fix = "PATCH", docs = "PATCH", build = "MINOR", perf = "PATCH", test = "PATCH", refactor = "PATCH" }
+change_type_order = ["🚀 Features", "🐛 Bug Fixes", "🚜 Refactor", "📚 Documentation", "⚡ Performance", "🧪 Testing", "⚙️ Miscellaneous Tasks"]
+commit_parser = '^((?P<change_type>feat|fix|refactor|perf|BREAKING CHANGE)(?:\((?P<scope>[^()\r\n]*)\)|\()?(?P<breaking>!)?|\w+!):\s(?P<message>.*)?'
+changelog_pattern = "^(?P<type>\\w+)(?:\\((?P<scope>\\w+)\\))?: (?P<summary>.+)$"
+
+[tool.commitizen.customize.change_type_map]
+build = "⚙️ Miscellaneous Tasks"
+ci = "⚙️ Miscellaneous Tasks"
+docs = "📚 Documentation"
+feat = "🚀 Features"
+fix = "🐛 Bug Fixes"
+perf = "⚡ Performance"
+refactor = "🚜 Refactor"
+test = "🧪 Testing"
+
+[[tool.commitizen.customize.questions]]
+type = "select"
+name = "type"
+message = "Выберите тип вносимых изменений"
+## Взято из Angular: https://github.com/angular/angular/blob/002699bcef1f9add58219ec8b16306abc3382b77/contributing-docs/commit-message-guidelines.md
+choices = [
+    { value = "build", name = "build: изменения, влияющие на систему сборки или внешние зависимости (примеры областей: deps, docker, kube))" },
+    { value = "ci", name = "ci: изменения в наших файлах конфигурации CI и скриптах (примеры: Gitlab CI)" },
+    { value = "docs", name = "docs: изменения только в документации" },
+    { value = "feat", name = "feat: новая функциональность" },
+    { value = "fix", name = "fix: исправление ошибки" },
+    { value = "perf", name = "perf: изменение кода, повышающее производительность" },
+    { value = "refactor", name = "refactor: изменение кода, которое не исправляет ошибку и не добавляет функциональность" },
+    { value = "test", name = "test: добавление отсутствующих тестов или исправление существующих тестов" },
+]
+
+[[tool.commitizen.customize.questions]]
+type = "select"
+name = "scope"
+message = "Выберите область вносимых изменений: (выберите skip чтобы пропустить)"
+choices = [
+    { value = "skip", name = "skip: без области" },
+    { value = "deps", name = "deps: добавление/обновление зависимостей" },
+    { value = "k8s", name = "k8s: изменения в развертывании через kubernetes(helm, werf)" },
+    { value = "docker", name = "docker: изменения в compose.yaml и/или Dockerfile" },
+    { value = "config", name = "config: изменения в конфигурации проекта" },
+    { value = "core", name = "core: изменения ядра проекта" },
+    # Области бизнес логики
+    { value = "dim", name = "dim: изменения в модуле 1С справочников" },
+    { value = "exchange", name = "exchange: изменения в модуле обмена с 1С" },
+    { value = "orders", name = "orders: изменения в модуле работы с заявками" },
+    { value = "auth", name = "auth: изменения в модуле авторизации" }
+]
+
+[[tool.commitizen.customize.questions]]
+type = "text"
+name = "summary"
+message = "Напишите краткое описание изменений (в нижнем регистре и без точки в конце)"
+
+[[tool.commitizen.customize.questions]]
+type = "text"
+name = "reason"
+message = "Объясните причину изменения: (оставьте пустым чтобы пропустить)"
+multiline = true
+
+[[tool.commitizen.customize.questions]]
+type = "text"
+name = "breaking_change"
+message = "Укажите критические изменения и инструкцию по миграции: (оставьте пустым чтобы пропустить)"
+multiline = true
+
+[[tool.commitizen.customize.questions]]
+type = "text"
+name = "deprecated"
+message = "Укажите устаревший функционал и рекомендации по обновлению: (оставьте пустым чтобы пропустить)"
+multiline = true
+
+[[tool.commitizen.customize.questions]]
+type = "text"
+name = "sdms"
+message = "Введите номер задачи в SDMS: (нажмите [enter] чтобы пропустить)"
+
+[[tool.commitizen.customize.questions]]
+type = "text"
+name = "closed_issues"
+message = "Введите номера issues в виде #<issue number 1> #<issue number 2>: (нажмите [enter] чтобы пропустить)"

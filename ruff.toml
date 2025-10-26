@@ -1,0 +1,34 @@
+line-length = 99  # PEP8
+
+[format]
+# Enable reformatting of code snippets in docstrings.
+docstring-code-format = true
+
+# Длина строк документации. В типографии рекомендуемая длина от 45 до 75 символов
+docstring-code-line-length = 72  # PEP8
+[lint]
+# Символы, которые не считать "спутанными" с символами из других локалей
+# https://github.com/astral-sh/ruff/blob/main/crates/ruff_linter/src/rules/ruff/rules/confusables.rs
+allowed-confusables = [
+    # Русские буквы
+    "А", "В", "Е", "З", "К", "М", "Н", "О", "Р", "С", "Т", "У", "Х", "Ь",
+    "а", "б", "г", "е", "о", "р", "с", "у", "х"
+]
+# Enable `from __future__ import annotations` imports
+future-annotations = true
+ignore = [
+    "COM812", # Используется форматировщик
+    "D100",
+    "D101",
+    "D102",
+    "D104",
+    "D105",
+    "D203", # Используется альтернатива D211
+    "D212", # Используется альтернатива D213
+]
+select = ["ALL"]
+
+[lint.per-file-ignores]
+"tests/*.py" = [
+    "S101", # использование assert допустимо в тестах
+]
